@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Software Ecosistema | Productividad Freelance</title>
+    <title>ProWorkspace | Ecosistema Completo</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    
+    <!-- PayPal SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AXhOXSEflhJ0l-Lba-11JOikxaexjcG1_CQjK4jYHGVpB_FDULWW-AX3gFLFDREUwMuqISU0Wz4CQqEA&buyer-country=US&currency=USD&components=buttons&enable-funding=venmo,card&disable-funding=paylater" data-sdk-integration-source="developer-studio"></script>
+
+    <script type="module" src="script.js" defer></script>
 </head>
 <body>
 
@@ -13,52 +18,144 @@
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
 
-    <nav class="navbar">
-        <div class="logo">
-            <div class="logo-icon">P</div>
-            <span>ProWorkspace</span>
+    <!-- Pestaña de Autenticación Unificada (Oculta tras login) -->
+    <div class="auth-view" id="authView">
+        <div class="auth-card">
+            <div class="logo-icon center-icon">P</div>
+            <h2>Acceso Universal</h2>
+            <p>Ingresa al ecosistema de forma segura</p>
+            
+            <div class="input-group">
+                <input type="email" id="authEmail" placeholder="Tu correo electrónico">
+            </div>
+            <div class="input-group">
+                <input type="password" id="authPassword" placeholder="Contraseña">
+            </div>
+            <div class="error-msg" id="authError"></div>
+            
+            <button class="primary-btn" id="loginBtn">Entrar / Registrarse</button>
+            <p class="auth-help">Si no tienes cuenta, se creará automáticamente.</p>
         </div>
-        <div class="nav-links">
-            <a href="https://contracts-olive.vercel.app/" target="_blank">Contratos</a>
-            <a href="https://financial-agenda.vercel.app/" target="_blank">Finanzas</a>
+    </div>
+
+    <!-- App View (Landing) -->
+    <div class="app-view" id="appView" style="display: none;">
+        <nav class="navbar">
+            <div class="logo">
+                <div class="logo-icon">P</div>
+                <span>ProWorkspace</span>
+            </div>
+            <div class="nav-links">
+                <span id="userPlanDisplay" class="user-plan">Cargando...</span>
+                <span id="userEmailDisplay" style="color: white; font-weight: 500;"></span>
+                <button id="logoutBtn" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;">Salir</button>
+            </div>
+        </nav>
+
+        <main class="hero-section">
+            <div class="badge">ECOSISTEMA INTEGRADO</div>
+            <h1 class="hero-title">Herramientas maestras para el <span>Freelancer Moderno</span></h1>
+            <p class="hero-subtitle">Maneja la legalidad de tus proyectos y el control de tus finanzas en un solo lugar. Un inicio de sesión unificado. Un ecosistema diseñado para escalar tu negocio.</p>
+            
+            <button id="mainPayBtn" class="primary-btn pulse-glow" style="max-width: 300px; margin-bottom: 40px;">OBTENER LA LICENCIA PRO</button>
+
+            <div class="apps-grid">
+                <a href="https://contracts-olive.vercel.app/" target="_blank" class="app-card contract-card">
+                    <div class="app-icon contract-icon">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    </div>
+                    <h3>ProContract</h3>
+                    <p>Generador inteligente de contratos vitales con firma digital, cláusulas editables y exportación en alta calidad.</p>
+                    <div class="card-footer">
+                        <span class="launch-text">Abrir App →</span>
+                    </div>
+                </a>
+
+                <a href="https://financial-agenda.vercel.app/" target="_blank" class="app-card finance-card">
+                    <div class="app-icon finance-icon">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    </div>
+                    <h3>ProManager</h3>
+                    <p>Tu agenda inteligente de tareas junto con un sistema analítico de flujos financieros e ingresos.</p>
+                    <div class="card-footer">
+                        <span class="launch-text">Abrir App →</span>
+                    </div>
+                </a>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 ProWorkspace. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <!-- Modal Pago Unificado Ultra-Premium -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal">
+            <button class="close-modal" id="closeModal">&times;</button>
+            <div class="modal-header">
+                <h2>Elige tu Ecosistema</h2>
+                <p style="color: #94a3b8; font-size: 14px; margin-top: 8px;">Adquiere acceso vitalicio. Funciona simultáneamente en todas nuestras apps.</p>
+            </div>
+            <div class="modal-body">
+                <style>
+                    /* Premium Inject Pricing Styles */
+                    .pricing-cards { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
+                    .pricing-card { flex: 1; min-width: 200px; border: 2px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; text-align: left; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: rgba(0,0,0,0.4); position: relative; overflow: hidden; }
+                    .pricing-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent); opacity: 0; transition: opacity 0.3s; }
+                    .pricing-card:hover::before { opacity: 1; }
+                    .pricing-card:hover { border-color: rgba(255,255,255,0.3); transform: translateY(-4px); }
+                    .pricing-card.selected { border-color: #6366f1; background: rgba(99, 102, 241, 0.05); transform: translateY(-4px); box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.5); }
+                    .pricing-card.bundle.selected { border-color: #8b5cf6; background: rgba(139, 92, 246, 0.05); box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.5); }
+                    .pricing-card h3 { font-size: 18px; margin-bottom: 8px; font-weight: 600; color: #f8fafc; }
+                    .pricing-card .price { font-size: 34px; font-weight: 800; margin-bottom: 20px; color: white; display:flex; align-items: baseline; gap: 4px; }
+                    .pricing-card .price span { font-size: 14px; color: #94a3b8; font-weight: 500; }
+                    .pricing-card ul { list-style: none; font-size: 14.5px; color: #cbd5e1; display:flex; flex-direction:column; gap: 12px; }
+                    .pricing-card li { display: flex; align-items: flex-start; gap: 10px; line-height: 1.4; }
+                    .pricing-card li svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; margin-top: 1px; flex-shrink: 0; }
+                    .pricing-card.selected li svg { stroke: #6366f1; }
+                    .pricing-card.bundle.selected li svg { stroke: #8b5cf6; }
+                    .badge-bundle { position: absolute; top: 0; right: 0; background: linear-gradient(135deg, #8b5cf6, #3b82f6); color: white; padding: 6px 16px; border-radius: 0 14px 0 14px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; box-shadow: -2px 2px 10px rgba(0,0,0,0.2); }
+                    #paypal-button-container { background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1); min-height: 150px; }
+                </style>
+                <div class="pricing-cards">
+                    <!-- Option 1: Solo Contratos -->
+                    <div class="pricing-card" data-plan="contract" data-price="2.00">
+                        <h3>ProContract</h3>
+                        <div class="price">$2.00 <span>USD</span></div>
+                        <ul>
+                            <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg> Contratos sin Límite</li>
+                            <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg> Sin Marcas de Agua</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Option 2: Solo Finanzas -->
+                    <div class="pricing-card" data-plan="manager" data-price="2.00">
+                        <h3>ProManager</h3>
+                        <div class="price">$2.00 <span>USD</span></div>
+                        <ul>
+                            <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg> Finanzas y Tareas</li>
+                            <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg> Dashboard Desbloqueado</li>
+                        </ul>
+                    </div>
+
+                    <!-- Option 3: BUNDLE -->
+                    <div class="pricing-card bundle selected" data-plan="bundle" data-price="4.00">
+                        <div class="badge-bundle">MEJOR VALOR</div>
+                        <h3>Pack Total (Ecosistema)</h3>
+                        <div class="price">$4.00 <span>USD</span></div>
+                        <ul>
+                            <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg> Desbloqueo en TODAS las apps</li>
+                            <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg> Cuenta Universal PRO</li>
+                            <li><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg> Ahorro y Confort</li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- PayPal SDK DOM -->
+                <div id="paypal-button-container"></div>
+            </div>
         </div>
-    </nav>
-
-    <main class="hero-section">
-        <div class="badge">ECOSISTEMA INTEGRADO</div>
-        <h1 class="hero-title">Herramientas maestras para el <span>Freelancer Moderno</span></h1>
-        <p class="hero-subtitle">Maneja la legalidad de tus proyectos y el control de tus finanzas en un solo lugar. Un inicio de sesión unificado. Un ecosistema diseñado para escalar tu negocio.</p>
-        
-        <div class="apps-grid">
-            <!-- App 1: Contratos -->
-            <a href="https://contracts-olive.vercel.app/" target="_blank" class="app-card contract-card">
-                <div class="app-icon contract-icon">
-                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                </div>
-                <h3>ProContract</h3>
-                <p>Generador inteligente de contratos vitales con firma digital, cláusulas editables y exportación en alta calidad.</p>
-                <div class="card-footer">
-                    <span class="launch-text">Abrir App →</span>
-                </div>
-            </a>
-
-            <!-- App 2: Finanzas & Agenda -->
-            <a href="https://financial-agenda.vercel.app/" target="_blank" class="app-card finance-card">
-                <div class="app-icon finance-icon">
-                    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                </div>
-                <h3>ProManager</h3>
-                <p>Tu agenda inteligente de tareas junto con un sistema analítico de flujos financieros e ingresos.</p>
-                <div class="card-footer">
-                    <span class="launch-text">Abrir App →</span>
-                </div>
-            </a>
-        </div>
-    </main>
-
-    <footer>
-        <p>&copy; 2026 ProWorkspace. Todos los derechos reservados.</p>
-    </footer>
+    </div>
 
 </body>
 </html>

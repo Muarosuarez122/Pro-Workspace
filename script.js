@@ -20,10 +20,14 @@ const db = getDatabase(app);
 let currentUser = null;
 let currentFbUser = null;
 
-async function saveDB() {
+async function savePremiumToFirebase() {
     if (currentFbUser && currentUser) {
         try {
-            await set(ref(db, 'users/' + currentFbUser.uid), currentUser);
+            await set(ref(db, 'users/' + currentFbUser.uid), {
+                isContractPro: currentUser.isContractPro,
+                isManagerPro: currentUser.isManagerPro,
+                isBundle: currentUser.isBundle
+            });
         } catch (e) {
             console.error("Error saving to Realtime Database:", e);
         }
@@ -85,36 +89,35 @@ document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentFbUser = user;
+            
+            currentUser = {
+                email: user.email,
+                isContractPro: false,
+                isManagerPro: false,
+                isBundle: false
+            };
+
+            const isAdmin = user.email.toLowerCase() === 'admin' || user.email.toLowerCase() === 'admin@admin.com';
+
             try {
                 const snapshot = await get(child(ref(db), `users/${user.uid}`));
                 if (snapshot.exists()) {
-                    currentUser = snapshot.val();
-                    const isAdmin = user.email.toLowerCase() === 'admin' || user.email.toLowerCase() === 'admin@admin.com';
-                    if (isAdmin && (!currentUser.isContractPro || !currentUser.isManagerPro)) {
-                         currentUser.isContractPro = true;
-                         currentUser.isManagerPro = true;
-                         currentUser.isBundle = true;
-                         saveDB();
-                    }
-                } else {
-                    const isAdmin = user.email.toLowerCase() === 'admin' || user.email.toLowerCase() === 'admin@admin.com';
-                    currentUser = {
-                        email: user.email,
-                        isContractPro: isAdmin,
-                        isManagerPro: isAdmin,
-                        isBundle: isAdmin,
-                        documents: [],
-                        agendaTasks: [],
-                        financeRecords: []
-                    };
-                    saveDB();
+                    const dbData = snapshot.val();
+                    currentUser.isContractPro = dbData.isContractPro || false;
+                    currentUser.isManagerPro = dbData.isManagerPro || false;
+                    currentUser.isBundle = dbData.isBundle || false;
                 }
-                showApp();
             } catch(e) {
-                authError.textContent = 'Error conectando a la base de datos.';
-                authError.style.display = 'block';
-                loginBtn.textContent = 'Entrar / Registrarse';
+                console.warn("Realtime DB block or new user:", e);
             }
+
+            if (isAdmin) {
+                currentUser.isContractPro = true;
+                currentUser.isManagerPro = true;
+                currentUser.isBundle = true;
+            }
+
+            showApp();
         } else {
             currentUser = null;
             currentFbUser = null;
@@ -129,15 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
         appView.style.display = 'block';
         document.getElementById('userEmailDisplay').textContent = currentUser.email;
 
-        // Visual logic based on premium status
         const planDisplay = document.getElementById('userPlanDisplay');
         const mainPayBtn = document.getElementById('mainPayBtn');
         
-        if (currentUser.isBundle) {
-            planDisplay.textContent = '💎 BUNDLE PRO';
-            planDisplay.style.color = '#8b5cf6';
-            mainPayBtn.style.display = 'none';
-        } else if (currentUser.isContractPro && currentUser.isManagerPro) {
+        if (currentUser.isBundle || (currentUser.isContractPro && currentUser.isManagerPro)) {
             planDisplay.textContent = '💎 BUNDLE PRO';
             planDisplay.style.color = '#8b5cf6';
             mainPayBtn.style.display = 'none';
@@ -152,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             planDisplay.textContent = '⚪ PLAN GRATUITO';
             planDisplay.style.color = '#94a3b8';
+            mainPayBtn.textContent = 'OBTENER LA LICENCIA PRO';
         }
     }
 
@@ -190,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             },
             onApprove: function(data, actions) {
-                return actions.order.capture().then(function(details) {
+                return actions.order.capture().then(async function(details) {
                     checkoutModal.classList.remove('active');
                     
                     if (selectedPlan === 'bundle') {
@@ -203,9 +202,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         currentUser.isManagerPro = true;
                     }
 
-                    saveDB();
+                    await savePremiumToFirebase();
                     showApp(); 
-                    alert('¡Pago exitoso! Accede a cualquiera de las apps para ver tus nuevas funciones.');
+                    alert('¡Pago exitoso! Accede a cualquiera de las apps para disfrutar de tus funciones.');
                 });
             }
         }).render('#paypal-button-container');
